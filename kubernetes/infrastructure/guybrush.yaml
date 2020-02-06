@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: guybrush-configmap
+data:
+  LECHUCK: Lechuck Legrande
+  TWOFLOWER: Rincewind Twoflower
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guybrush
+  labels:
+    app: guybrush
+spec:
+  selector:
+    matchLabels:
+      app: guybrush
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: guybrush
+    spec:
+      containers:
+      - name: guybrush
+        image: dsinnovators/training:guybrush
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: guybrush-configmap
+        env:
+          - name: TOOTHROT
+            valueFrom:
+              secretKeyRef:
+                name: guybrush-env
+                key: guybrush-env-toothrot
+        
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: guybrush
+  labels:
+    app: guybrush
+    name: guybrush
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    nodePort: 30001
+  selector:
+    app: guybrush
